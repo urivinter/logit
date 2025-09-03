@@ -6,10 +6,9 @@ from pydantic import BaseModel
 from typing import List
 
 # Import SQLAlchemy components
-import sqlalchemy
-from sqlalchemy import create_engine, Column, Integer, String
-from sqlalchemy.orm import sessionmaker, Session
-from sqlalchemy.ext.declarative import declarative_base
+
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, Session, DeclarativeBase, Mapped, mapped_column
 
 # --- Database Configuration (for SQLite) ---
 
@@ -19,17 +18,20 @@ engine = create_engine(
     DATABASE_URL, connect_args={"check_same_thread": False}
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
+
+
+class Base(DeclarativeBase):
+    pass
 
 
 # --- SQLAlchemy Table Model ---
 
 class Log(Base):
     __tablename__ = "logs"
-    id = Column(Integer, primary_key=True, index=True)
-    section_number = Column(Integer, index=True)
-    contractor_type = Column(String)
-    objective = Column(String)
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    section_number: Mapped[int] = mapped_column(index=True)
+    contractor_type: Mapped[str]
+    objective: Mapped[str]
 
 
 # --- Pydantic Data Models ---
