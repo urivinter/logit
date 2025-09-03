@@ -84,7 +84,6 @@ async def get_all_logs(skip: int = 0, limit: int = 100, db: Session = Depends(ge
     return db.query(Log).offset(skip).limit(limit).all()
 
 
-# --- NEW ENDPOINT ---
 @app.get("/logs/{log_id}", response_model=LogEntry)
 async def get_log_by_id(log_id: int, db: Session = Depends(get_db)):
     """
@@ -94,3 +93,37 @@ async def get_log_by_id(log_id: int, db: Session = Depends(get_db)):
     if db_log is None:
         raise HTTPException(status_code=404, detail="Log not found")
     return db_log
+
+
+# --- NEW ENDPOINT ---
+@app.put("/logs/{log_id}", response_model=LogEntry)
+async def update_log(log_id: int, log_update: LogEntryCreate, db: Session = Depends(get_db)):
+    """
+    Updates an existing log entry in the database.
+    """
+    db_log = db.query(Log).filter(Log.id == log_id).first()
+    if db_log is None:
+        raise HTTPException(status_code=404, detail="Log not found")
+
+    # Update the fields of the existing log object
+    for key, value in log_update.model_dump().items():
+        setattr(db_log, key, value)
+
+    db.commit()
+    db.refresh(db_log)
+    return db_log
+
+
+# --- NEW ENDPOINT ---
+@app.delete("/logs/{log_id}", response_model=dict)
+async def delete_log(log_id: int, db: Session = Depends(get_db)):
+    """
+    Deletes a log entry from the database.
+    """
+    db_log = db.query(Log).filter(Log.id == log_id).first()
+    if db_log is None:
+        raise HTTPException(status_code=404, detail="Log not found")
+
+    db.delete(db_log)
+    db.commit()
+    return {"detail": "Log deleted successfully"}
